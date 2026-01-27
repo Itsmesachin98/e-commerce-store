@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 import User from "../models/user.model.js";
 import { redisConnection } from "../lib/redis.js";
@@ -147,6 +148,44 @@ const login = async (req, res) => {
     }
 };
 
-const logout = async (req, res) => {};
+const logout = async (req, res) => {
+    try {
+        const refreshToken = req.cookies?.refreshToken;
+
+        // If refresh token exists, revoke it
+        if (refreshToken) {
+            const decoded = jwt.decode(refreshToken);
+
+            if (decoded?.userId) {
+                await redisConnection.del(`gg:refresh_token:${decoded.userId}`);
+            }
+        }
+
+        // Clear cookies
+        res.clearCookie("accessToken", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+        });
+
+        res.clearCookie("refreshToken", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Logged out successfully",
+        });
+    } catch (error) {
+        console.error("Logout Error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
+    }
+};
 
 export { signup, login, logout };
