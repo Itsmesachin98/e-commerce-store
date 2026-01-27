@@ -3,35 +3,14 @@ import jwt from "jsonwebtoken";
 
 import User from "../models/user.model.js";
 import { redisConnection } from "../lib/redis.js";
+
 import {
     generateAccessToken,
     generateRefreshToken,
 } from "../utils/generateTokens.js";
 
-const storeRefreshToken = async (userId, refreshToken) => {
-    redisConnection.set(
-        `gg:refresh_token:${userId}`,
-        refreshToken,
-        "EX",
-        7 * 24 * 60 * 60, // 7 days
-    );
-};
-
-const setCookies = (res, accessToken, refreshToken) => {
-    res.cookie("accessToken", accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 15 * 60 * 1000, // 15 minutes
-    });
-
-    res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-};
+import setCookies from "../utils/cookie.js";
+import storeRefreshToken from "../services/token.service.js";
 
 const signup = async (req, res) => {
     try {
