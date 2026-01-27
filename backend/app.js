@@ -7,8 +7,18 @@ import cookieParser from "cookie-parser";
 
 import authRoutes from "./routes/auth.route.js";
 import connectDB from "./lib/db.js";
+import { connectRedis } from "./lib/redis.js";
 
 connectDB();
+
+(async () => {
+    try {
+        await connectRedis();
+    } catch (err) {
+        console.error("Redis failed to connect", err);
+        process.exit(1);
+    }
+})();
 
 const app = express();
 
