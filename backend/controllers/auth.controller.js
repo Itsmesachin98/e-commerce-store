@@ -1,5 +1,36 @@
 import bcrypt from "bcryptjs";
+
 import User from "../models/user.model.js";
+import { redisConnection } from "../lib/redis.js";
+import {
+    generateAccessToken,
+    generateRefreshToken,
+} from "../utils/generateTokens.js";
+
+const storeRefreshToken = async (userId, refreshToken) => {
+    redisConnection.set(
+        `gg:refresh_token:${userId}`,
+        refreshToken,
+        "EX",
+        7 * 24 * 60 * 60, // 7 days
+    );
+};
+
+const setCookies = (res, accessToken, refreshToken) => {
+    res.cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 15 * 60 * 1000, // 15 minutes
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+};
 
 const signup = async (req, res) => {
     try {
@@ -32,6 +63,14 @@ const signup = async (req, res) => {
             email,
             password: hashedPassword,
         });
+
+        // Authenticate
+        const refreshToken = generateRefreshToken(user._id);
+        const accessToken = generateAccessToken(user._id);
+
+        await storeRefreshToken(user._id, refreshToken);
+
+        setCookies(res, accessToken, refreshToken);
 
         // Send response (never send password)
         res.status(201).json({
