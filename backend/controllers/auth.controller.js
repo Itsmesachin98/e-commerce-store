@@ -127,6 +127,14 @@ const login = async (req, res) => {
             });
         }
 
+        // Authenticate
+        const refreshToken = generateRefreshToken(user._id);
+        const accessToken = generateAccessToken(user._id);
+
+        await storeRefreshToken(user._id, refreshToken);
+
+        setCookies(res, accessToken, refreshToken);
+
         // Successful login response
         res.status(200).json({
             success: true,
