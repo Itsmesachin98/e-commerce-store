@@ -6,6 +6,8 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 
 import authRoutes from "./routes/auth.route.js";
+import productRoutes from "./routes/product.route.js";
+
 import connectDB from "./lib/db.js";
 import { connectRedis } from "./lib/redis.js";
 
@@ -30,5 +32,6 @@ app.use(express.urlencoded({ extended: true }));
 const PORT = process.env.PORT || 3000;
 
 app.use("/api/auth", authRoutes);
+app.use("/api/products", productRoutes);
 
 app.listen(PORT, () => console.log(`Server is running on PORT:  ${PORT}`));
