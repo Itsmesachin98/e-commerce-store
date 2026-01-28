@@ -9,8 +9,12 @@ import {
     generateRefreshToken,
 } from "../utils/generateTokens.js";
 
-import setCookies from "../utils/cookie.js";
 import storeRefreshToken from "../services/token.service.js";
+
+import {
+    setAccessTokenCookie,
+    setRefreshTokenCookie,
+} from "../utils/cookie.js";
 
 const signup = async (req, res) => {
     try {
@@ -49,8 +53,8 @@ const signup = async (req, res) => {
         const accessToken = generateAccessToken(user._id);
 
         await storeRefreshToken(user._id, refreshToken);
-
-        setCookies(res, accessToken, refreshToken);
+        setAccessTokenCookie(res, accessToken);
+        setRefreshTokenCookie(res, refreshToken);
 
         // Send response (never send password)
         res.status(201).json({
@@ -111,8 +115,8 @@ const login = async (req, res) => {
         const accessToken = generateAccessToken(user._id);
 
         await storeRefreshToken(user._id, refreshToken);
-
-        setCookies(res, accessToken, refreshToken);
+        setAccessTokenCookie(res, accessToken);
+        setRefreshTokenCookie(res, refreshToken);
 
         // Successful login response
         res.status(200).json({
@@ -175,4 +179,57 @@ const logout = async (req, res) => {
     }
 };
 
-export { signup, login, logout };
+// This will refresh the access token
+const refreshToken = async (req, res) => {
+    try {
+        const refreshToken = req.cookies?.refreshToken;
+
+        if (!refreshToken) {
+            return res.status(401).json({
+                success: false,
+                message: "Refresh token not provided",
+            });
+        }
+
+        // Verify refresh token
+        const decoded = jwt.verify(
+            refreshToken,
+            process.env.REFRESH_TOKEN_SECRET,
+        );
+
+        // Check token against Redis
+        const storedToken = await redisConnection.get(
+            `gg:refresh_token:${decoded.userId}`,
+        );
+
+        if (!storedToken || storedToken !== refreshToken) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid or expired refresh token",
+            });
+        }
+
+        // Generate new access token
+        const accessToken = generateAccessToken(decoded.userId);
+
+        // Set new access token cookie
+        setAccessTokenCookie(res, accessToken);
+
+        return res.status(200).json({
+            success: true,
+            accessToken,
+        });
+    } catch (error) {
+        console.error("Refresh token error:", error);
+
+        return res.status(401).json({
+            success: false,
+            message: "Unauthorized",
+        });
+    }
+};
+
+// TODO: Implement get profile later
+// const getProfile = (req, res) => {};
+
+export { signup, login, logout, refreshToken };

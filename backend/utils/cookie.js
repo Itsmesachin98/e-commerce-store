@@ -1,11 +1,13 @@
-const setCookies = (res, accessToken, refreshToken) => {
+const setAccessTokenCookie = (res, accessToken) => {
     res.cookie("accessToken", accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
         maxAge: 15 * 60 * 1000, // 15 minutes
     });
+};
 
+const setRefreshTokenCookie = (res, refreshToken) => {
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
@@ -14,4 +16,4 @@ const setCookies = (res, accessToken, refreshToken) => {
     });
 };
 
-export default setCookies;
+export { setAccessTokenCookie, setRefreshTokenCookie };
