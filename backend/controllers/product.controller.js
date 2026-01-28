@@ -27,6 +27,7 @@ const createProduct = async (req, res) => {
             description,
             price,
             image: uploadedImage.secure_url,
+            imagePublicId: uploadedImage.public_id,
             category,
         });
 
@@ -133,4 +134,52 @@ const getFeaturedProducts = async (req, res) => {
     }
 };
 
-export { createProduct, getAllProducts, getFeaturedProducts };
+const deleteProduct = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Find product
+        const product = await Product.findById(id);
+
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: "Product not found",
+            });
+        }
+
+        // Delete image from Cloudinary (if exists)
+        if (product.imagePublicId) {
+            try {
+                await cloudinary.uploader.destroy(product.imagePublicId);
+                console.log("Cloudinary image deleted successfully");
+            } catch (cloudinaryError) {
+                console.error(
+                    "Failed to delete image from Cloudinary:",
+                    cloudinaryError,
+                );
+            }
+        }
+
+        // Soft delete product
+        product.isActive = false;
+        await product.save();
+
+        // Invalidate cache
+        await redisConnection.del("featured_products");
+
+        return res.status(200).json({
+            success: true,
+            message: "Product deleted successfully",
+        });
+    } catch (error) {
+        console.error("Error in deleteProduct controller:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
+    }
+};
+
+export { createProduct, getAllProducts, getFeaturedProducts, deleteProduct };

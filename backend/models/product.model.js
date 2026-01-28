@@ -29,6 +29,11 @@ const productSchema = new mongoose.Schema(
             required: [true, "Product image is required"],
         },
 
+        imagePublicId: {
+            type: String,
+            required: [true, "Image public ID is required"],
+        },
+
         category: {
             type: String,
             required: [true, "Product category is required"],
