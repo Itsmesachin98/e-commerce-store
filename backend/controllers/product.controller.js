@@ -134,6 +134,137 @@ const getFeaturedProducts = async (req, res) => {
     }
 };
 
+const getRecommendedProducts = async (req, res) => {
+    try {
+        const products = await Product.aggregate([
+            {
+                $match: {
+                    isActive: true,
+                },
+            },
+            {
+                $sample: { size: 3 },
+            },
+            {
+                $project: {
+                    _id: 1,
+                    name: 1,
+                    description: 1,
+                    image: 1,
+                    price: 1,
+                },
+            },
+        ]);
+
+        return res.status(200).json({
+            success: true,
+            count: products.length,
+            products,
+        });
+    } catch (error) {
+        console.error("Error in getRecommendedProducts controller:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
+    }
+};
+
+const getProductsByCategory = async (req, res) => {
+    try {
+        const { category } = req.params;
+
+        if (!category) {
+            return res.status(400).json({
+                success: false,
+                message: "Category is required",
+            });
+        }
+
+        const products = await Product.find({
+            category: category.toLowerCase(),
+            isActive: true,
+        })
+            .sort({ createdAt: -1 })
+            .lean();
+
+        if (products.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "No products found in this category",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            count: products.length,
+            products,
+        });
+    } catch (error) {
+        console.error("Error in getProductsByCategory controller:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
+    }
+};
+
+const toggleFeaturedProduct = async (req, res) => {
+    try {
+        const { id: productId } = req.params;
+
+        // Find product
+        const product = await Product.findById(productId);
+
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: "Product not found",
+            });
+        }
+
+        // Toggle featured flag
+        product.isFeatured = !product.isFeatured;
+        const updatedProduct = await product.save();
+
+        // Update Redis cache
+        await updateFeaturedProductsCache();
+
+        return res.status(200).json({
+            success: true,
+            message: "Featured status updated successfully",
+            product: updatedProduct,
+        });
+    } catch (error) {
+        console.error("Error in toggleFeaturedProduct controller:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
+    }
+};
+
+async function updateFeaturedProductsCache() {
+    try {
+        const featuredProducts = await Product.find({
+            isFeatured: true,
+            isActive: true,
+        }).lean();
+
+        await redisConnection.set(
+            "gg:featured_products",
+            JSON.stringify(featuredProducts),
+            "EX",
+            60 * 10, // 10 minutes TTL
+        );
+    } catch (error) {
+        console.error("Error updating featured products cache:", error);
+    }
+}
+
 const deleteProduct = async (req, res) => {
     try {
         const { id } = req.params;
@@ -182,4 +313,12 @@ const deleteProduct = async (req, res) => {
     }
 };
 
-export { createProduct, getAllProducts, getFeaturedProducts, deleteProduct };
+export {
+    createProduct,
+    getAllProducts,
+    getFeaturedProducts,
+    getRecommendedProducts,
+    getProductsByCategory,
+    toggleFeaturedProduct,
+    deleteProduct,
+};
