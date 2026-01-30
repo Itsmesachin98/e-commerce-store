@@ -61,7 +61,40 @@ const addToCart = async (req, res) => {
     }
 };
 
-const removeAllFromCart = async (req, res) => {};
+// DELETE /api/cart
+const removeAllFromCart = async (req, res) => {
+    try {
+        const { productId } = req.body;
+        const user = req.user;
+
+        if (!productId) {
+            return res.status(400).json({
+                success: false,
+                message: "Product ID is required",
+            });
+        }
+
+        user.cartItems = user.cartItems.filter(
+            (item) => item.product.toString() !== productId,
+        );
+
+        // Persist changes
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Product removed from cart",
+            cartItems: user.cartItems,
+        });
+    } catch (error) {
+        console.error("Error in removeAllFromCart controller:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
+    }
+};
 
 const updateQuantity = async (req, res) => {};
 
