@@ -1,6 +1,35 @@
 import Product from "../models/product.model.js";
 
-const getCartProducts = async (req, res) => {};
+// GET /api/cart
+const getCartProducts = async (req, res) => {
+    try {
+        const user = req.user;
+
+        // Populate product details
+        await user.populate({
+            path: "cartItems.product",
+            select: "name price image isActive",
+        });
+
+        // Filter out inactive / deleted products
+        const cartItems = user.cartItems.filter(
+            (item) => item.product && item.product.isActive,
+        );
+
+        return res.status(200).json({
+            success: true,
+            count: cartItems.length,
+            cartItems,
+        });
+    } catch (error) {
+        console.error("Error in getCartProducts controller:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
+    }
+};
 
 // POST /api/cart
 const addToCart = async (req, res) => {
