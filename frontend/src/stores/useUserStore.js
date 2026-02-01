@@ -56,6 +56,44 @@ const useUserStore = create((set) => ({
             toast.error(message);
         }
     },
+
+    login: async ({ email, password }) => {
+        // Start loading
+        set({ loading: true });
+
+        // ---- Input Validation ----
+        if (!email?.trim()) {
+            set({ loading: false });
+            return toast.error("Email is required");
+        }
+
+        if (!password) {
+            set({ loading: false });
+            return toast.error("Password is required");
+        }
+
+        try {
+            const res = await axios.post("/auth/login", {
+                email: email.trim(),
+                password,
+            });
+
+            set({
+                user: res.data.user,
+                loading: false,
+            });
+
+            toast.success(res.data.message || "Login successful");
+            return res.data.user;
+        } catch (error) {
+            const message =
+                error?.response?.data?.message ||
+                "Something went wrong. Please try again.";
+
+            set({ loading: false });
+            toast.error(message);
+        }
+    },
 }));
 
 export default useUserStore;
