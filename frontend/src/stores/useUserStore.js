@@ -57,7 +57,7 @@ const useUserStore = create((set) => ({
         }
     },
 
-    login: async ({ email, password }) => {
+    login: async (email, password) => {
         // Start loading
         set({ loading: true });
 
