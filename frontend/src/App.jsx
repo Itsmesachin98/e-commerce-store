@@ -1,13 +1,22 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 
 import HomePage from "./pages/HomePage";
 import SignUpPage from "./pages/SignUpPage";
 import LoginPage from "./pages/LoginPage";
 import Navbar from "./components/Navbar";
 import useUserStore from "./stores/useUserStore";
+import { useEffect } from "react";
+import LoadingSpinner from "./components/LoadingSpinner";
 
 function App() {
-    const { user } = useUserStore();
+    const { user, checkAuth, checkingAuth } = useUserStore();
+
+    useEffect(() => {
+        checkAuth();
+    }, [checkAuth]);
+
+    if (checkingAuth) return <LoadingSpinner />;
+
     return (
         <div className="min-h-screen bg-gray-900 text-white relative overflow-hidden">
             {/* Background gradient */}
@@ -22,10 +31,13 @@ function App() {
 
                 <Routes>
                     <Route path="/" element={<HomePage />} />
-                    <Route path="/signup" element={<SignUpPage />} />
+                    <Route
+                        path="/signup"
+                        element={user ? <Navigate to="/" /> : <SignUpPage />}
+                    />
                     <Route
                         path="/login"
-                        element={user ? <HomePage /> : <LoginPage />}
+                        element={user ? <Navigate to="/" /> : <LoginPage />}
                     />
                 </Routes>
             </div>

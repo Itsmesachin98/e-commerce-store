@@ -8,6 +8,18 @@ const useUserStore = create((set) => ({
     loading: false,
     checkingAuth: true,
 
+    checkAuth: async () => {
+        set({ checkingAuth: true });
+
+        try {
+            const res = await axios.get("/auth/profile");
+            set({ user: res.data.user, checkingAuth: false });
+        } catch (error) {
+            console.error("Auth check failed:", error);
+            set({ user: null, checkingAuth: false });
+        }
+    },
+
     signup: async ({ name, email, password, confirmPassword }) => {
         // Start loading
         set({ loading: true });
@@ -94,6 +106,25 @@ const useUserStore = create((set) => ({
             toast.error(message);
         }
     },
+
+    logout: async () => {
+        try {
+            await axios.post("/auth/logout");
+
+            set({ user: null });
+
+            toast.success("Logged out successfully");
+        } catch (error) {
+            console.error("Logout Error:", error);
+
+            toast.error(
+                error?.response?.data?.message ||
+                    "Failed to logout. Please try again.",
+            );
+        }
+    },
 }));
+
+// TODO: Implement the axios interceptors for refreshing the access token
 
 export default useUserStore;
