@@ -229,7 +229,30 @@ const refreshToken = async (req, res) => {
     }
 };
 
-// TODO: Implement get profile later
-// const getProfile = (req, res) => {};
+// GET /api/auth/profile
+const getProfile = async (req, res) => {
+    try {
+        const user = req.user;
 
-export { signup, login, logout, refreshToken };
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized access",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            user,
+        });
+    } catch (error) {
+        console.error("Get Profile Error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
+    }
+};
+
+export { signup, login, logout, refreshToken, getProfile };
