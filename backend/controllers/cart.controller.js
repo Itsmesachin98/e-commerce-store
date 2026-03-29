@@ -74,6 +74,12 @@ const addToCart = async (req, res) => {
 
         await user.save();
 
+        // Populate product details
+        await user.populate({
+            path: "cartItems.product",
+            select: "name price image isActive",
+        });
+
         return res.status(200).json({
             success: true,
             message: "Product added to cart",
@@ -123,6 +129,7 @@ const removeAllFromCart = async (req, res) => {
     }
 };
 
+// PUT /api/cart/:productId
 const updateQuantity = async (req, res) => {
     try {
         const { id: productId } = req.params;
