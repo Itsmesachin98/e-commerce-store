@@ -13,7 +13,7 @@ const useCartStore = create((set, get) => ({
         try {
             const res = await axios.get("/cart");
             set({ cart: res?.data?.cartItems || [] });
-            // get().calculateTotals();
+            get().calculateTotals();
         } catch (error) {
             const message =
                 error?.response?.data?.message ||
@@ -30,7 +30,7 @@ const useCartStore = create((set, get) => ({
         try {
             const res = await axios.post("/cart", { productId: product._id });
             set({ cart: res?.data?.cartItems || [] });
-            // get().calculateTotals();
+            get().calculateTotals();
             toast.success("Product added to cart");
         } catch (error) {
             const message =
@@ -52,8 +52,8 @@ const useCartStore = create((set, get) => ({
                     (item) => item.product._id !== productId,
                 ),
             }));
-            // get().calculateTotals();
 
+            get().calculateTotals();
             toast.success("Product removed from cart");
         } catch (error) {
             const message =
@@ -82,7 +82,7 @@ const useCartStore = create((set, get) => ({
                 ),
             }));
 
-            // get().calculateTotals();
+            get().calculateTotals();
         } catch (error) {
             const message =
                 error?.response?.data?.message ||
@@ -93,22 +93,22 @@ const useCartStore = create((set, get) => ({
         }
     },
 
-    // calculateTotals: () => {
-    //     const { cart, coupon } = get();
+    calculateTotals: () => {
+        const { cart, coupon } = get();
 
-    //     const subtotal = cart.reduce(
-    //         (sum, item) => sum + item.product.price * item.quantity,
-    //         0,
-    //     );
-    //     let total = subtotal;
+        const subtotal = cart.reduce(
+            (sum, item) => sum + item.product.price * item.quantity,
+            0,
+        );
+        let total = subtotal;
 
-    //     if (coupon) {
-    //         const discount = subtotal * (coupon.discountPercentage / 100);
-    //         total = subtotal - discount;
-    //     }
+        if (coupon) {
+            const discount = subtotal * (coupon.discountPercentage / 100);
+            total = subtotal - discount;
+        }
 
-    //     set({ subtotal, total });
-    // },
+        set({ subtotal, total });
+    },
 }));
 
 export default useCartStore;
