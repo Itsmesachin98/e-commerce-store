@@ -1,38 +1,40 @@
-import { motion } from "framer-motion";
-import useCartStore from "../stores/useCartStore";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { MoveRight } from "lucide-react";
-// import { loadStripe } from "@stripe/stripe-js";
-// import axios from "../lib/axios";
+import { loadStripe } from "@stripe/stripe-js";
 
-// const stripePromise = loadStripe(
-//     "pk_test_51KZYccCoOZF2UhtOwdXQl3vcizup20zqKqT9hVUIsVzsdBrhqbUI2fE0ZdEVLdZfeHjeyFXtqaNsyCJCmZWnjNZa00PzMAjlcL",
-// );
+import axios from "../lib/axios";
+import useCartStore from "../stores/useCartStore";
+
+const stripePromise = loadStripe(
+    "pk_test_51Sw1OP77Ix3kHjVJ1Ii9wHw2GfSgyiybPneu1sM77Mmoga7tthAESXJpgKEbns5lT4xxr90XY8NfGsOC9geRWIuO008zsy1tOz",
+);
 
 const OrderSummary = () => {
-    const { total, subtotal, coupon, isCouponApplied } = useCartStore();
+    const { cart, total, subtotal, coupon, isCouponApplied } = useCartStore();
 
     const savings = subtotal - total;
     const formattedSubtotal = subtotal.toFixed(2);
     const formattedTotal = total.toFixed(2);
     const formattedSavings = savings.toFixed(2);
 
-    // const handlePayment = async () => {
-    //     const stripe = await stripePromise;
-    //     const res = await axios.post("/payments/create-checkout-session", {
-    //         products: cart,
-    //         couponCode: coupon ? coupon.code : null,
-    //     });
+    const handlePayment = async () => {
+        const stripe = await stripePromise;
 
-    //     const session = res.data;
-    //     const result = await stripe.redirectToCheckout({
-    //         sessionId: session.id,
-    //     });
+        const res = await axios.post("/payments/create-checkout-session", {
+            products: cart,
+            couponCode: coupon ? coupon.code : null,
+        });
 
-    //     if (result.error) {
-    //         console.error("Error:", result.error);
-    //     }
-    // };
+        const session = res.data;
+        const result = await stripe.redirectToCheckout({
+            sessionId: session.id,
+        });
+
+        if (result.error) {
+            console.error("Error:", result.error);
+        }
+    };
 
     return (
         <motion.div
@@ -91,7 +93,7 @@ const OrderSummary = () => {
                     className="flex w-full items-center justify-center rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-300"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    // onClick={handlePayment}
+                    onClick={handlePayment}
                 >
                     Proceed to Checkout
                 </motion.button>
