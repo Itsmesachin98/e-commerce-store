@@ -13,7 +13,7 @@ const useCartStore = create((set, get) => ({
     getMyCoupon: async () => {
         try {
             const response = await axios.get("/coupons");
-            set({ coupon: response.data });
+            set({ coupon: response.data.coupon });
         } catch (error) {
             console.error("Error fetching coupon:", error);
         }
@@ -22,7 +22,7 @@ const useCartStore = create((set, get) => ({
     applyCoupon: async (code) => {
         try {
             const response = await axios.post("/coupons/validate", { code });
-            set({ coupon: response.data, isCouponApplied: true });
+            set({ coupon: response.data.coupon, isCouponApplied: true });
             get().calculateTotals();
             toast.success("Coupon applied successfully");
         } catch (error) {
