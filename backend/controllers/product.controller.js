@@ -2,6 +2,7 @@ import Product from "../models/product.model.js";
 import { redisConnection } from "../lib/redis.js";
 import cloudinary from "../lib/cloudinary.js";
 
+// POST /api/products
 const createProduct = async (req, res) => {
     let uploadedImage = null; // keep reference for cleanup
 
@@ -62,6 +63,7 @@ const createProduct = async (req, res) => {
     }
 };
 
+// GET /api/products
 const getAllProducts = async (req, res) => {
     try {
         const products = await Product.find({ isActive: true }).lean();
@@ -81,6 +83,7 @@ const getAllProducts = async (req, res) => {
     }
 };
 
+// GET /api/products/featured
 const getFeaturedProducts = async (req, res) => {
     try {
         const CACHE_KEY = "gg:featured_products";
@@ -171,6 +174,7 @@ const getRecommendedProducts = async (req, res) => {
     }
 };
 
+// GET /api/products/category/:category
 const getProductsByCategory = async (req, res) => {
     try {
         const { category } = req.params;
@@ -211,6 +215,7 @@ const getProductsByCategory = async (req, res) => {
     }
 };
 
+// PATCH /api/products/:id
 const toggleFeaturedProduct = async (req, res) => {
     try {
         const { id: productId } = req.params;
@@ -265,6 +270,7 @@ async function updateFeaturedProductsCache() {
     }
 }
 
+// DELETE /api/products/:id
 const deleteProduct = async (req, res) => {
     try {
         const { id } = req.params;
