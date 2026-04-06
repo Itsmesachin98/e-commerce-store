@@ -1,5 +1,6 @@
 import Coupon from "../models/coupon.model.js";
 
+// GET /api/coupons
 const getCoupon = async (req, res) => {
     try {
         const userId = req.user?._id;
@@ -38,6 +39,7 @@ const getCoupon = async (req, res) => {
     }
 };
 
+// POST /api/coupon/validate
 const validateCoupon = async (req, res) => {
     try {
         const { code } = req.body;

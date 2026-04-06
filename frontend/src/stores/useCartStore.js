@@ -10,25 +10,36 @@ const useCartStore = create((set, get) => ({
     coupon: null,
     isCouponApplied: false,
 
+    // GET /api/coupons
     getMyCoupon: async () => {
         try {
-            const response = await axios.get("/coupons");
-            set({ coupon: response.data.coupon });
+            const res = await axios.get("/coupons");
+            set({ coupon: res?.data?.coupon || null });
         } catch (error) {
-            console.error("Error fetching coupon:", error);
+            const message =
+                error?.response?.data?.message ||
+                error?.message ||
+                "Failed to fetch coupon";
+
+            toast.error(message);
+            set({ coupon: null });
         }
     },
 
+    // POST /api/coupon/validate
     applyCoupon: async (code) => {
         try {
-            const response = await axios.post("/coupons/validate", { code });
-            set({ coupon: response.data.coupon, isCouponApplied: true });
+            const res = await axios.post("/coupons/validate", { code });
+            set({ coupon: res?.data?.coupon || null, isCouponApplied: true });
             get().calculateTotals();
             toast.success("Coupon applied successfully");
         } catch (error) {
-            toast.error(
-                error.response?.data?.message || "Failed to apply coupon",
-            );
+            const message =
+                error?.response?.data?.message ||
+                error?.message ||
+                "Failed to apply coupon";
+
+            toast.error(message);
         }
     },
 
@@ -55,7 +66,7 @@ const useCartStore = create((set, get) => ({
         }
     },
 
-    // POST /ap/cart
+    // POST /api/cart
     addToCart: async (product) => {
         try {
             const res = await axios.post("/cart", { productId: product._id });
